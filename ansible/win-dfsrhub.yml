@@ -1,0 +1,17 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-dfsrhub.yml
+#
+# Prereqs: Management domain has to exist
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure DFS replication hub server(s)
+- name: ConfigureDFSHub
+  hosts: win-dfsrhub
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-dfsrhub }

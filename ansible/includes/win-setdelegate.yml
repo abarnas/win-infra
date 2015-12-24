@@ -1,0 +1,19 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: /includes/setDelegateServer.yaml
+# Purpose: Sets the forest or domain controller as the delegation server depending on win_domainplacement
+#--------------------------------------------------------------------------------------------------------------
+
+# Set the delegation server
+#- set_fact:
+#    win_delegate: "{{ win_topology.forest.primaryDNS }}"
+#- set_fact:
+#    win_delegate: "{{ win_topology.domain.primaryDNS }}"
+#  when: win_domainplacement == "domain"
+
+  - name: SetDomainDelegate
+    set_fact:
+      win_delegate: "{{ (win_domainplacement == 'domain') | ternary(win_topology.domain.primaryDNS,win_topology.forest.primaryDNS) }}"
+    delegate_to: localhost
+#  - debug: msg="Setting delegate to {{ win_delegate }}"
+#    delegate_to: localhost

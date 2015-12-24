@@ -1,0 +1,24 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: win-domaincontroller
+# Purpose: Add additional domain controller to an existing domain. Note that this can be a domain controller
+#          in the same site as the primary DC, or in a different site. So we have to prepare any possible new
+#          site links and subnets.
+#
+# Tasks:
+# - Promote the server to a domain controller in a child domain
+# - Configure DNS reverse lookup zones, forwarders, and conditional forwarders for the current given site
+# ------------------------------------------------------------------------------------------------------------------
+
+# Add the domain controller to the specified child domain
+- name: AddDomainController
+  hosts: win-domaincontroller
+  max_fail_percentage: 49
+  serial: 3
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_topology.domain.password }}" }
+
+    - { role: win-domaincontroller }
+
+    - { role: win-dnsserver }

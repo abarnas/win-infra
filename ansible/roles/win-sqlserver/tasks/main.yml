@@ -1,0 +1,53 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-sqlserver
+# ------------------------------------------------------------------------------------------------------------------
+
+# Set the delegation server
+- include: "{{playbook_dir}}/includes/win-setdelegate.yml"
+
+- name: CheckDelegate
+  debug: msg="{{ win_delegate }}"
+
+# Create SQL service account
+- name: CreateSQLServiceAccount
+  script: files/createDomainUser.ps1 -UserAccount "{{ sqlserver.serviceaccount | dictToPS }}" -Placement "{{ win_domainplacement }}" -Topology "{{ win_topology | dictToPS }}" 
+  delegate_to: "{{ win_delegate }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true
+
+# Add SQL Account to Local Administrators
+- name: JoinSQLAccountToAdministrators
+  script: files/joinUserToAdministrators.ps1 -Placement "{{ win_domainplacement }}" -UserAccount "{{ sqlserver.serviceaccount | dictToPS }}" -Topology "{{ win_topology | dictToPS }}"
+  when: win_domainplacement != "standalone"
+
+# Configure the servicehost for SQL Backups. Note: task is delegated to the servicehost. 
+- name: ConfigureSQLBackupShare
+  script: configureSQLBackupShare.ps1 -SQLServer "{{ sqlserver | dictToPS }}"
+  when: win_domainplacement != "standalone"
+  delegate_to: "{{ sqlserver.servicehost.ipaddress }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true
+
+# Prepare data drive
+- name: PrepareDataDrive
+  script: files/formatDrive.ps1 -Drive "{{ sqlserver.config.instancedir }}"
+
+# Install SQL Server
+- name: InstallSQLServer
+  script: installSQLServer.ps1 -Placement "{{ win_domainplacement }}" -SQLServer "{{ sqlserver | dictToPS }}" -Topology "{{ win_topology | dictToPS }}" -Repository "{{ win_repository | dictToPS }}"
+ 
+# Set SQL Service startup parameters
+- name: AddSQLStartupParamater
+  script: addSQLStartupParameter.ps1 -SQLServer "{{ sqlserver | dictToPS }}"
+
+# Set SQL Instance TCP Port
+- name: ConfigureSQLInstancePort
+  script: configureSQLInstancePort.ps1 -SQLServer "{{ sqlserver | dictToPS }}"
+
+# enableFirewallSQL
+- name: EnableSQLFirewall
+  script: enableSQLFirewall.ps1 -SQLServer "{{ sqlserver | dictToPS }}"
+

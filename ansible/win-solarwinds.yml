@@ -1,0 +1,17 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-solarwinds.yml
+#
+# Prereqs: Active Directory forest and MGMT domain have to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+# Install Solarwinds Application VM
+- name: ConfigureSolarwindsServer
+  hosts: win-solarwinds
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember, 
+              datadrive: "{{ win_solarwinds.datadrive }}", 
+              datadrive_size: "{{ win_solarwinds.datadrive_size }}" }

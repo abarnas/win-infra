@@ -1,0 +1,52 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-failovercluster
+# Install Failover Cluster Feature and Configure
+#
+# Inputs: 
+#------------------------------------------------------------------------------------------------------------------
+
+# Install the failover cluster feature
+- name: InstallFailoverClusterRole
+  script: installFailoverCluster.ps1
+
+# Clear any previous attempts to create the failover cluster
+- name: ClearPreviousClusterAttempts
+  script: clearClusterNode.ps1
+
+# Configure the failover cluster. 
+- name: CreateFailoverCluster
+  script: createFailoverCluster.ps1 -Placement "{{ win_domainplacement }}" -Cluster "{{ clusterconfig | dictToPS }}" -Topology "{{ win_topology | dictToPS }}"
+  run_once: true
+
+# Prepare the FSW share on the servicehost. 
+- name: PrepareFileshareWitness
+  script: prepareFileshareWitness.ps1 -Cluster "{{ clusterconfig | dictToPS }}"
+  delegate_to: "{{ clusterconfig.servicehost.ipaddress }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true
+
+# Configure the cluster quorum
+- name: configureQuorum
+  script: configureQuorum.ps1 -Cluster "{{ clusterconfig | dictToPS }}"
+  run_once: true
+
+# Configure delegation permissions for SQL computer accounts
+- name: ConfigureClusterDelegation
+  script: configureClusterDelegation.ps1 -Placement "{{ win_domainplacement }}" -Cluster "{{ clusterconfig | dictToPS }}" -Topology "{{ win_topology | dictToPS }}"
+  delegate_to: "{{ win_topology.domain.primaryDNS }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true
+  when: win_domainplacement == 'domain'
+
+# Configure delegation permissions for SQL computer accounts
+- name: ConfigureClusterDelegationForest
+  script: configureClusterDelegation.ps1 -Placement "{{ win_domainplacement }}" -Cluster "{{ clusterconfig | dictToPS }}" -Topology "{{ win_topology | dictToPS }}"
+  delegate_to: "{{ win_topology.forest.primaryDNS }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true
+  when: win_domainplacement == 'forest'
+

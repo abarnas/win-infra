@@ -1,0 +1,15 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-kmsserver
+# Install the Volume Activation Service
+#
+# Inputs: productKey	- KMS Host Key
+#------------------------------------------------------------------------------------------------------------------
+- name: InstallKMSService 
+  script: installKms.ps1 -Site "{{ win_site | dictToPS }}" 
+
+- name: EnableKMSFirewall
+  script: enableFirewallKMS.ps1 -Site "{{ win_site | dictToPS }}" 
+
+# Restart
+- include: "{{playbook_dir}}/includes/win-restart.yml"

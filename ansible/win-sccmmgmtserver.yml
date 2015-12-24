@@ -1,0 +1,16 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-scommgmtserver.yml
+#
+# Prereqs: Active Directory forest has to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SCCM server
+- name: ConfigureSCCMMgmtServer
+  hosts: win-sccmmgmtserver
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+

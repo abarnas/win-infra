@@ -1,0 +1,3 @@
+[submodule "ansible/files"]
+	path = ansible/files
+	url = git://github.com/abarnas/win-common

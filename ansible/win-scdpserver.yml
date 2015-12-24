@@ -1,0 +1,22 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-scdpserver.yml
+# Purpose: Configures a remote SCCM server purposed as SCCM secondary site server and DFS Replication target
+#
+# Prereqs: Active Directory forest and domain has to exist
+#          Windows repo image in CIS-Infra
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SCCM distribution point (SCDP)
+- name: ConfigureSCDPServer
+  hosts: win-scdpserver
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-dfsrspoke }
+
+    - { role: win-scdpserver }
+

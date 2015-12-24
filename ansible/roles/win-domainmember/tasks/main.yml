@@ -1,0 +1,48 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-domainmember
+# Purpose: Join servers to the given forest or child domain (NOT for domain controllers!)
+#
+# Inputs  : Topology	- Forest/domain topology
+#           Site        - Default OU for member servers (hashtable)
+#           Placement   - Specifies to join the root forest or a child domain
+#			(see common.yml)
+# ------------------------------------------------------------------------------------------------------------------
+
+# Set static IP and configure DNS client settings to the domain controllers of the current site
+- name: ConfigureTCPIP
+  script: files/configureNetworking.ps1 -Placement "{{ win_domainplacement }}" -Topology "{{ win_topology | dictToPS }}"
+
+# Set the delegation server
+- include: "{{playbook_dir}}/includes/win-setdelegate.yml"
+
+# Make sure we have the domain OU to store the computer account for this member server
+- name: PrepareSiteSpecificOUs
+  script: files/configureSiteOUs.ps1 -SiteName "{{ win_site.sitename }}" -DomainOUs "{{ win_ous | dictToPS }}"
+  delegate_to: "{{ win_delegate }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true
+
+# Join the server to the domain
+- name: JoinMemberServer
+  script: joinMemberServer.ps1 -Placement "{{ win_domainplacement }}" -Topology "{{ win_topology | dictToPS }}"  -Site "{{ win_site | dictToPS }}"
+  register: result
+
+# Restart
+- include: "{{playbook_dir}}/includes/win-restart.yml"
+
+# Add forest Domain Admins to child domain Domain Admins group
+- name: AddForestDomainAdmins
+  script: files/addDomainAdmins.ps1 -Topology "{{ win_topology | dictToPS }}" 
+  when: win_domainplacement == 'domain'
+
+# SetWSMANCredSSP
+- name: EnableWSMANCredSSP
+  script: setWSMANCredSSP.ps1 -Enable
+
+# Configure UserRightAssignment Trust Account For Delegation
+- name: EnableUserRightAssignment
+  script: enableUserRightAssignment.ps1 -AccountList "{{ ansible_ssh_user }}" -UserRightList "SeEnableDelegationPrivilege"
+
+

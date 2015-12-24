@@ -1,0 +1,17 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: win-primaryforestcontroller
+# Purpose: Create new forest. 
+# ------------------------------------------------------------------------------------------------------------------
+
+# Create the first domain controller of a new forest
+- name: CreateForest
+  hosts: win-primaryforestcontroller
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_topology.forest.password }}" }
+
+    - { role: win-primaryforestcontroller }
+
+    - { role: win-dnsserver }
+

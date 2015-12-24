@@ -1,0 +1,15 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-scommgmtserver.yml
+#
+# Prereqs: Active Directory forest has to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SCOM server
+- name: ConfigureSCOMMgmtServer
+  hosts: win-scommgmtserver
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }

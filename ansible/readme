@@ -1,0 +1,45 @@
+###########################################################
+Install on ansible host
+pip install http://github.com/diyan/pywinrm/archive/master.zip#egg=pywinrm
+	or
+pywinrm-master.zip in readme_files directory
+
+###########################################################
+Run on Windows client
+https://raw.githubusercontent.com/ansible/ansible/devel/examples/scripts/ConfigureRemotingForAnsible.ps1
+	or
+ConfigureRemotingForAnsible.ps1 or in readme_files directory
+
+
+###########################################################
+Check setting on Windows Client
+winrm set winrm/config/service '@{AllowUnencrypted="true"}'
+
+
+###########################################################
+Create local Windows user account and add to Administrator groups
+
+$UserName = 'automate'
+$Password = 'Password123'
+$Desc = 'Automatically created local account'
+$ComputerName = "."
+$Computer = [ADSI]"WinNT://$ComputerName,computer"
+$User = $Computer.Create("user", $UserName)
+$User.SetPassword($Password)
+$User.SetInfo()
+$User.description = $Desc
+$User.SetInfo()
+$User.UserFlags = 65536
+$User.SetInfo()
+$Group = [ADSI]("WinNT://$ComputerName/administrators,group")
+$Group.add("WinNT://$UserName,user")
+
+
+###########################################################
+Sample network connectivity and authentication tests from ansible host to Windows client
+
+nc -v 192.168.56.15 5986
+curl -vk -d "" -u "automate:Password123" "https://192.168.56.15:5986/wsman"
+ansible windows -i hosts -m win_ping
+
+###########################################################

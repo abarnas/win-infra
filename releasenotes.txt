@@ -1,0 +1,15 @@
+----------------------------------------------------------------------------------------------------
+12/6/2015 - bug fixes
+
+CreateDomainAccount failed to create account	
+Fixed - ALLN-P3-DC03 not prepped for remote powershell
+
+SQL Install - CheckInstallSource function requires authentication to allow access to remote UNC patch
+fixed - Map network drive prior to accessing unc path
+
+SQL Install - bug in service account assignment to SQL sysadmins group	
+fixed
+
+Failover Cluster: delegation of cluster computer account failed due to incompatible Powershell code. 	
+Fixed - replaced $searcher object with Get-ADCcomputer function.
+-----------------------------------------------------------------------------------------------------

@@ -1,0 +1,18 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-sqlcluster
+# Purpose : Enable and configure SQL AlwaysOn 
+# ------------------------------------------------------------------------------------------------------------------
+
+# enableFirewallSQL
+- name: EnableSQLReplicationFirewall
+  script: enableSQLReplicationFirewall.ps1 -Cluster "{{ clusterconfig | dictToPS }}"
+  
+# EnableSQLAlwaysOn
+- name: EnableSQLAlwaysOn
+  script: enableSQLAlwaysOn.ps1 -SQLServer "{{ sqlserver | dictToPS }}"
+
+# Create availability group(s)
+- name: CreateSQLAvailabilityGroup
+  script: createSQLAvailabilityGroup.ps1 -SQLServer "{{ sqlserver | dictToPS }}" -Cluster "{{ clusterconfig | dictToPS }}" -Domain "{{ domaindata | dictToPS }}"
+  run_once: true

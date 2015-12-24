@@ -1,0 +1,12 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-akamaigtm.yml
+# Purpose: Configure Akamai GTM Service for the current site
+#
+# Prereqs: Outbound Internet access to configure Akamai GTM Service
+#--------------------------------------------------------------------------------------------------------------
+
+# Configure GTM Service on Luna Portal
+- name: ConfigureLunaPortal
+  script: akamaiTrafficMgmt.ps1 -Authentication "{{ authentication | dictToPS }}" -Site "{{ win_site | dictToPS }}" 
+  when: win_provisionakamai

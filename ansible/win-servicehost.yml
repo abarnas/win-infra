@@ -1,0 +1,17 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-servicehost.yml
+#
+# Prereqs: Active Directory forest and domain has to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SVC host
+- name: ConfigureSVCHost
+  hosts: win-servicehost
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-servicehost }

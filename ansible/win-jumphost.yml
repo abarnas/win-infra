@@ -1,0 +1,17 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-svchost.yml
+#
+# Prereqs: Active Directory forest and domain has to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SVC host
+- name: ConfigureJumpHost
+  hosts: win-jumphost
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-jumphost, domaindata: "{{ win_topology.domain }}" }

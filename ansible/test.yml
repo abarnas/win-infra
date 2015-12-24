@@ -1,0 +1,12 @@
+---
+- name: CopyFromSDLC-Mirror
+  hosts: win-sdlc-mirror
+  gather_facts: false
+
+  tasks:
+  - name: CopySQL2012
+    shell: curl -u ccsoob:m1858aSrj32n7ma4djG -o /var/tmp/sql2012.ent.sp2.iso -s https://sdlc-mirror.cisco.com/rpm/secure/images/sql2012.ent.sp2.iso
+    delegate_to: localhost
+
+  - name: CopyToWindows
+    win_copy: src=/var/tmp/ubuntu14.iso dest=c:/support/

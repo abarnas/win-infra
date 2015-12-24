@@ -1,0 +1,17 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-dfsrspoke
+# Purpose : Configures a DFS replication spoke
+# ------------------------------------------------------------------------------------------------------------------
+
+# Prepare data drive
+- name: PrepareDataDrive
+  script: files/formatDrive.ps1 -Drive "{{ win_dfsr.contentdrive }}"
+
+# Install DFS Replication feature
+- name: InstallDFSReplication
+  script: files/installDFSReplication.ps1
+
+- name: AddDFSRMember
+  script: addDFSRMember.ps1 -Placement "{{ win_domainplacement }}" -Replication "{{ win_dfsr | dictToPS }}" -Topology "{{ win_topology | dictToPS }}"
+

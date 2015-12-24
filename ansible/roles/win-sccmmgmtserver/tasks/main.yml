@@ -1,0 +1,16 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-sccmmanager
+# Purpose : Configure the SCCM default device collections for a new site
+#
+# Inputs  : Topology	- AD forest/domain topology parameters
+#           Site		- Site-specific information (sitename, location, DNS client settings, etc.)
+# ------------------------------------------------------------------------------------------------------------------
+
+- name: ConfigureSCCMDeviceCollections
+  script: configureSCCMCollections.ps1 " -Topology "{{ win_topology | dictToPS }}"  -Site "{{ win_site | dictToPS }}"
+  delegate_to: "{{ sccmcasserver }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  ignore_errors: true
+

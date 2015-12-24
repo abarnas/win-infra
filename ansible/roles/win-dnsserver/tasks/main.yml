@@ -1,0 +1,14 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-dnsserver
+# Purpose : Configure the DNS reverse lookup zones, conditional forwarder for KMS, and the DNS server
+#           forwarders to the root forest.
+#
+# Inputs  : Topology	- AD forest/domain topology parameters
+#           Site		- Site-specific information (sitename, location, DNS client settings, etc.)
+#           Placement	- Specify 'forest' or 'domain' (When 'forest' no DNSServerForwarders are configured)
+#			(see common.yml, domain.yml, forest.yml)
+# ------------------------------------------------------------------------------------------------------------------
+
+- name: ConfigureDNSServer
+  script: configureDNS.ps1 -Placement "{{ win_domainplacement }}" -Topology "{{ win_topology | dictToPS }}"  -Site "{{ win_site | dictToPS }}"

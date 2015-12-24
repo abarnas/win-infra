@@ -1,0 +1,786 @@
+---
+#-------------------------------------------------------------------------------------------------------
+# Ansible authentication
+#-------------------------------------------------------------------------------------------------------
+ansible_ssh_user: sa-cloud
+ansible_ssh_pass: Password01
+ansible_ssh_port: 5986
+ansible_connection: winrm
+
+#-------------------------------------------------------------------------------------------------------
+# Global directives
+# NOTES: do NOT change values here, but use a role variable if a different value is required!
+#        Conversion of booleans to PowerShell supports usage of 1 or 0 only. Do NOT use false/true!
+#-------------------------------------------------------------------------------------------------------
+
+# Seconds to wait for system reboot (set to 120 to allow DCPROMO to complete)
+win_rebootdelay: 120
+
+# Specify if Akamai's GTM service needs to be provisioned. Set to 'false' for sites that do not use GTM
+win_provisionakamai: true
+
+#-------------------------------------------------------------------------------------------------------
+# KMS global settings
+#-------------------------------------------------------------------------------------------------------
+win_kmshostkey: 'V7KKW-B3D4B-RRC3G-DQVY3-R6C83'
+win_kmsport: 1688
+win_kmshostname: kms
+win_kmsdomainname: cloud.cisco.com
+
+#-------------------------------------------------------------------------------------------------------
+# Global SQL variables
+#-------------------------------------------------------------------------------------------------------
+win_sqlserver2012_entkey: 748RB-X4T6B-MRM7V-RTVFF-CHC8H
+win_sqlserver2012_devkey: YQWTX-G8T4R-QW4XX-BVH62-GP68Y
+
+#-------------------------------------------------------------------------------------------------------
+# Global System Center variables
+#-------------------------------------------------------------------------------------------------------
+win_systemcenter_key: BXH69-M62YX-QQD6R-3GPWX-8WMFY
+
+#-------------------------------------------------------------------------------------------------------
+# Default organizational units & groups
+#-------------------------------------------------------------------------------------------------------
+win_ou_root: Cisco
+win_ou_managedservers: "Managed Servers"
+win_ou_admingroups: "Administrative Groups"
+win_ou_adminusers: "Administrative Users"
+win_ou_applicationaccounts: "Application Accounts"
+
+#-------------------------------------------------------------------------------------------------------
+# Global Windows Settings (top level)
+#-------------------------------------------------------------------------------------------------------
+
+# Forest and child domain names, passwords, domainmode, group settings
+win_forestname: cisinfra
+win_domainname: mgmt
+win_domain: local
+win_forestpassword: "Password01"
+win_domainpassword: "Password01"
+win_forestmode: Win2012R2
+win_domainmode: Win2012R2
+win_forestnameservers:
+  - 192.168.56.107
+  - 192.168.56.103
+
+#-------------------------------------------------------------------------------------------------------
+# win_dfsr
+# Dictionary containing DFSR service values
+#
+# Parameters
+# ----------------------------
+# groupname                    Name of DFSR group
+# contentdrive                Drive containing content
+# contentfolder                Folder containing content to replicate
+# replicationfolder            Logical replication folder name
+# stagingquota                Set to 8192
+# primaryhub                
+#   ipaddress               IP address of primary parent replication server (alln-p3-sccm03)
+#   hostname                  Computername of primary parent replication server
+# secondaryhub               
+#   ipaddress               IP address of secondary parent replication server (alln-p3-sccm03)
+#   hostname                  Computername of secondary parent replication server
+#-------------------------------------------------------------------------------------------------------
+win_dfsr:
+  groupname: "CIS Repository"
+  contentdrive: "C:"
+  contentfolder: "Repository"
+  replicationfolder: "Repository"
+  stagingquota: 8096
+  primaryhub: 
+    ipaddress: 192.168.56.101
+    hostname: win2012-kms01
+  secondaryhub: 
+    ipaddress: 192.168.56.104
+    hostname: win2012-kms02
+
+#-------------------------------------------------------------------------------------------------------
+# win_scom
+# Dictionary containing SCOM related values
+#
+# Parameters
+# ----------------------------
+# managementgroupname        SCOM management group name
+# managementport            Default: 5723
+# installdrive                Target folder for SCOM installation
+# installationfolder        "\\Program Files\\Microsoft System Center 2012 R2\\Operations Manager"
+# gatewa
+#   catemplate              CA Authority template for SCOM gateway (ie. SCOMGateway)
+#   installdrive            Drive to install SCOM Gateway software to
+# primarymgmtserver            
+#   ipaddress               IP address of primary SCOM mgmt server (alln-p3-scom01)
+#   hostname                  Computername of primary SCOM mgmt server
+# secondarymgmtserver            
+#   ipaddress               IP address of secondary SCOM mgmt server (alln-p3-scom02)
+#   hostname                  Computername of secondary SCOM mgmt server
+# actionaccount
+#   username                SCOM action account username (ie. SCOMaa) - don't specify domainname
+#   password                <password>
+#   oupath                    Target OU to store account
+# dataaccessaccount
+#   username                SCOM data access account username (ie. SCOMdas - don't specify domainname
+#   password                <password>
+#   oupath                    Target OU to store account
+# datareaderaccount
+#   username                SCOM action account username (ie. SCOMread) - don't specify domainname
+#   password                <password>
+#   oupath                    Target OU to store account
+#-------------------------------------------------------------------------------------------------------
+win_scom:
+  managementgroup: "CISINFRA SCOM Management Group"
+  managementport: 5723
+  installdrive: "D:"
+  installfolder: "\\Program Files\\Microsoft System Center 2012 R2\\Operations Manager"
+  gateway:
+    catemplate: SCOMGateway
+    installdrive: "C:"
+  primarymgmtserver: 
+    ipaddress: 10.202.165.211
+    hostname: "alln-p3-scom01.{{ win_topology.forest.domainname }}"
+  secondarymgmtserver:
+    ipaddress: 10.202.165.212
+    hostname: "alln-p3-scom02.{{ win_topology.forest.domainname }}"
+  actionaccount:
+    username: SCOMaa
+    password: Password01
+    oupath: "OU=SCOM,{{win_topology.organizationalunits.applicationusersOU}}"
+  dataaccessaccount:
+    username: SCOMdas
+    password: Password01
+    oupath: "OU=SCOM,{{win_topology.organizationalunits.applicationusersOU}}"
+  datareaderaccount:
+    username: SCOMread
+    password: Password01
+    oupath: "OU=SCOM,{{win_topology.organizationalunits.applicationusersOU}}"
+
+#-------------------------------------------------------------------------------------------------------
+# win_sccm
+# Dictionary containing SCCM service values
+#
+# Parameters
+# ----------------------------
+# sitenamecas                CAS SiteName (ie. CIS)
+# forestprimarysitename     Primary SiteName of SCCM in cisinfra.local (ie. C01)
+# domainprimarysitename        Primary SiteName of SCCM in mgmt.cisinfra.local (ie. C02)
+# primarymgmtserver            
+#   ipaddress               IP address of primary SCCM mgmt server (alln-p3-sccm01)
+#   hostname                  Computername of primary SCCM mgmt server
+# secondarymgmtserver            
+#   ipaddress               IP address of secondary SCCM mgmt server (alln-p3-sccm02)
+#   hostname                  Computername of secondary SCCM mgmt server
+#-------------------------------------------------------------------------------------------------------
+win_sccm:
+  sitenamecas: CIS
+  forestprimarysitename: C01
+  domainprimarysitename: C02
+  primarymgmtserver: 
+    ipaddress: 10.202.165.174
+    hostname: alln-p3-sccm01
+  secondarymgmtserver: 
+    ipaddress: 10.202.165.215
+    hostname: alln-p3-sccm02
+
+
+#Member of local server Admins (list)
+win_serveradmins: "{{ win_forestname }}\\CIS-ADM-INFRA"
+
+#-------------------------------------------------------------------------------------------------------
+# AD Topology (top level dictionary)
+# --------------------
+# primarysites          : sites that are part of AD root forest topology (primary hub locations)
+#   <sitename>          : name of primary hub in AD topology (ie. us-texas-3)
+#      subnets            : list of networks in service cloud
+#      location            : Location description. (ie. "London, EU", "Allen, TX", "Tokyo, JP", etc)
+#      isprimary        : Specifies site as the primary AD hub (ONE, and only ONE, can be the primary)
+#      cost             : replication cost from primary site in the list to the second sites
+#      interval         : replication schedule between win_site.sitename and sites.<sitename>
+#   <sitename>          : name of secondary hub in AD topology (ie. us-rdu-1)
+#      subnets            : list of networks in service cloud
+#      location            : Location description. (ie. "London, EU", "Allen, TX", "Tokyo, JP", etc)
+#      issecondary      : Specifies site as the primary AD hub (One, and only one, can be the primary)
+#      cost             : replication cost from win_site.sitename to sites.<sitename>
+#      interval         : replication schedule between win_site.sitename and sites.<sitename>
+# forest                : 
+#   domainname            : FQDN of forest domain name
+#   netbiosname             : Netbios domain name
+#   password            : used for DSRM password as well as domain admin
+#   forestmode            : set to Win2012R2
+#   domainmode            : set to Win2012R2
+#   primaryDNS            : IP of first forest domain controller
+#   secondaryDNS        : IP of second forest domain controller
+# domain
+#   domainname            : FQDN of domain
+#   domainnetbiosname    : Netbios domain name
+#   password            : used for DSRM password as well as domain admin
+#   domainmode            : set to Win2012R2
+#   primaryDNS            : IP of first child domain controller
+#   secondaryDNS        : IP of second child domain controller
+# organizationalunits
+#   managedServersOU    : LDAP path of OU containing managed servers (do NOT include 'sitename')
+#   applicationusersOU  : LDAP path of OU containing application service accounts
+#-------------------------------------------------------------------------------------------------------
+
+# Forest and Domain dictionary (windows-cis-infra.yaml)
+win_topology:
+  primarysites:
+    us-texas-3:
+      subnets: 
+        - 10.202.165.128/25
+      location: 'Allen, TX'
+      isprimary: true
+      cost: 100
+      interval: 180
+    us-rdu-1:
+      subnets: 
+        - 10.202.52.0/26
+      location: 'RTP, NC'
+      issecondary: true
+      cost: 283
+      interval: 180
+  ca:
+    hostname: alln-p3-cert01
+    ipaddress: 10.202.165.195
+    rootauthority: "MS-CISINFRA Root Certification Authority"
+  forest:
+    domainname: "{{ win_forestname }}.{{ win_domain }}"
+    netbiosname: "{{ win_forestname }}"
+    password: "{{ win_forestpassword }}"
+    forestmode: "{{ win_forestmode }}"
+    domainmode: "{{ win_domainmode }}"
+    primaryDNS: "{{ win_forestnameservers[0] }}"
+    secondaryDNS: "{{ win_forestnameservers[1] }}"
+    rootDse: "DC={{ win_forestname }},DC={{ win_domain }}"
+  domain:
+    domainname: "{{ win_domainname }}.{{ win_forestname }}.{{ win_domain }}"
+    netbiosname: "{{ win_domainname }}"
+    password: "{{ win_domainpassword }}"
+    domainmode: "{{ win_domainmode }}"
+    primaryDNS: "{{ win_site.dns.primaryDNS }}"
+    secondaryDNS: "{{ win_site.dns.secondaryDNS }}"
+    rootDse: "DC={{ win_domainname }},DC={{ win_forestname }},DC={{ win_domain }}"
+  organizationalunits:
+    managedserversOU: "OU={{win_ous.managedservers.name}},OU={{win_ous.root.name}}"
+    applicationusersOU: "OU={{win_ous.applicationaccounts.name}},OU={{win_ous.root.name}}"
+
+#-------------------------------------------------------------------------------------------------------
+# Dictionary for OU and Groups configuration (top-level)
+#
+# Do NOT change, unless when adding new groups or sub-OUs
+#-------------------------------------------------------------------------------------------------------
+win_ous:
+  root:
+    name: "{{ win_ou_root }}"
+  admingroups:
+    name: "{{ win_ou_admingroups }}"
+    path: "OU={{ win_ou_root }}"
+    groups:
+      - CIS-ADM-SCCM
+      - CIS-ADM-SCOM
+      - CIS-ADM-SQL
+      - CIS-ADM-INFRA
+    domainadmins: 
+      - CIS-ADM-INFRA
+  adminusers:
+    name: "{{ win_ou_adminusers }}"
+    path: "OU={{ win_ou_root }}"
+  managedservers:
+    name: "{{ win_ou_managedservers }}"
+    path: "OU={{ win_ou_root }}"
+  applicationaccounts:
+    name: "{{ win_ou_applicationaccounts }}"
+    path: "OU={{ win_ou_root }}"
+    subous: 
+      - SCOM
+      - SCCM
+      - SQL
+      - PO
+
+#-------------------------------------------------------------------------------------------------------
+# win_site (SITE-SPECIFIC dictionary)
+# Site specific settings/environmental (--> move to separate var file)
+#
+# ALL parameters are required!
+# ----------------------------
+#
+# sitename              : name of the datacenter/site (for example: us-texas-3)
+# subnets                : 
+#   servicecloud        : Array of private networks in service cloud. 
+#   tenantcloud         : Array of public networks for tenant cloud. Specify 0 if subnet is unknown
+#   internaldns            : Array of networks where iDNS server are places. Specify 0 if subnet is unknown
+# location                : Location description. (ie. "London, EU", "Allen, TX", "Tokyo, JP", etc)
+# localadminpassword    : password used for local admins on domain member servers
+# sites                 : list of sites that are part of AD root forest topology (primary hub locations)
+#   <sitename>          : name of primary hub in AD topology (ie. us-texas-3)
+#      cost             : replication cost from win_site.sitename to sites.<sitename>
+#      interval         : replication schedule between win_site.sitename and sites.<sitename>
+#   <sitename>          : name of secondary hub in AD topology (ie. us-rdu-1)
+#      cost             : replication cost from win_site.sitename to sites.<sitename>
+#      interval         : replication schedule between win_site.sitename and sites.<sitename>
+# dns
+#   primaryDNS          : IP of primary domain controller in the child domain
+#   secondaryDNS        : IP of secondary domain controller in the child domain
+#   primaryIDNS            : IP of primary internal DNS (used for DNS conditional forwarder 'cloud.cisco.com')
+#   secondaryIDNS         : IP of primary internal DNS (used for DNS conditional forwarder 'cloud.cisco.com'). Specify 0 if subnet is unknown
+# datacenter            : Hashtable specifying the datacenter's geo location:
+#     city              : city name (ie. London, Amsterdam, Allen, etc.)
+#     continent         : Two-character continent code.  Example: EU, AU, US, etc.
+#     country           : Two-character country code. Example: UK, NL, US, GE, JP, etc.
+#     latitude          : Geographical latitude (number value)
+#     longitude         : Geographical longitude (number value)
+# kms
+#   hostname            : KMS host name (default: kms) (do NOT change!)
+#   domainname            : KMS domain name (default: cloud.cisco.com) (do NOT change!)
+#   port                  : KMS port (default: 1688)
+#   hostkey                 : KMS host key (do NOT change!)
+#   vip                  : Loadbalancer public VIP of the KMS service at the site you're adding
+#   activate            : Specify whether to activate this KMS host key with MSFT (default: true. specify 'false' for test sites)
+#   backupSites           : Comma-separated list of the KMS fallback sites. 
+#-------------------------------------------------------------------------------------------------------
+
+# Site specific dictionary (windows-cis-infra-site.yaml)
+win_site:
+  sitename: us-rdu-1
+  subnets:
+    servicecloud:
+      - 192.168.56.0/26
+    tenantcloud: 0
+#      - 173.39.248.0/21
+    internaldns: 0
+#      - 171.70.168.0/24
+  location: "RTP, NC"
+  localadminpassword: Password01
+  sitereplication:
+    us-texas-3:
+      cost: 283
+      interval: 180
+    us-rdu-1:
+      cost: 100
+      interval: 180
+  dns:
+    primaryDNS: 192.168.56.106
+    secondaryDNS: 192.168.56.108
+    primaryIDNS: 8.8.8.8
+    secondaryIDNS: 0
+  datacenter:
+    city: RTP
+    state: NC
+    continent: US
+    country: US
+    latitude: 41.888484
+    longitude: -87.62917
+  repository:
+    hostname: ALLN-P3-SCCM03
+  kms:
+    hostname: "{{ win_kmshostname }}"
+    domainname: "{{ win_kmsdomainname }}"
+    port: "{{ win_kmsport }}"
+    hostkey: "{{ win_kmshostkey }}"
+    vip: 173.39.255.9
+    activate: 0
+    backupsites: 
+      - us-rcdn-1
+      - us-texas-1
+
+#-------------------------------------------------------------------------------------------------------
+# win_scdphost
+# Dictionary containing values for the SCDP server using the windows-2012-r2-std_repo image
+#
+# Parameters
+# ----------------------------
+# placement                        Specificies domain or forest membership
+# toolssourceshare                Root folder of software share
+# toolssourcefolder                Folder under software share from where to copy utilities
+# sqlserver
+#   installsource                Install source path for Setup.exe
+#   config
+#     pid                       SQL product key. win_sqlserver_developerkey / win_sqlserver_enterprisekey
+#     features                  List of features to install management tools only
+#     installshareddir          Install location (optional)
+#     installsharedwowdir       WOW Install location (optional)
+#-------------------------------------------------------------------------------------------------------
+
+# Software repository 
+win_repository:
+  logpath: "C:\\Support"
+  source: "{{ win_site.repository.hostname }}\\Support$"
+  toolssourcefolder: "\\Tools"
+  sqlsourcefolder: "\\Applications\\MSSQLServer\\v2012.ent"
+  sqlsourcefile: "setup.exe"
+  scomsourcefolder: "\\Applications\\MSSystemCenter\\SCOM.R2"
+  scomgatewaysourcefolder: "\\Applications\\MSSystemCenter\\SCOM.R2\\Gateway\\AMD64"
+  scomgatewaysourcefile: "MOMGateway.msi"
+  scomapprovaltoolsourcefolder: "\\Applications\\MSSystemCenter\\SCOM.R2\\SupportTools\\AMD64"
+  scomapprovaltoolfile: "Microsoft.EnterpriseManagement.GatewayApprovalTool.exe"
+  sccmsourcefolder: "\\Applications\\MSSystemCenter\\SCCM.R2"
+
+#-------------------------------------------------------------------------------------------------------
+# win_jumphost
+# Dictionary containing values for the jumphost
+#
+# Parameters
+# ----------------------------
+# toolssourceshare                Root folder of software share
+# toolssourcefolder                Folder under software share from where to copy utilities
+# sqlserver
+#   installsource                Install source path for Setup.exe
+#   config
+#     pid                       SQL product key. win_sqlserver_developerkey / win_sqlserver_enterprisekey
+#     features                  List of features to install management tools only
+#     installshareddir          Install location (optional)
+#     installsharedwowdir       WOW Install location (optional)
+#-------------------------------------------------------------------------------------------------------
+
+# Jumphost dictionary (windows-cis-infra-site.yaml)
+win_jumphost:
+  sqlserver:
+    config: 
+      pid: "{{ win_sqlserver2012_entkey }}"
+      features: CONN,SSMS,ADV_SSMS
+
+#-------------------------------------------------------------------------------------------------------
+# win_servicehost 
+# Dictionary containing values for the SQL cluster service host
+#
+# ALL parameters are required!
+# ----------------------------
+# hostname                Netbios servername
+# ipaddress                IP address
+# backupsharename        Share name used for SQL backups (ie. "SQL-Backups)
+# backuprootdrive        Drive letter of SQL backups share folder (ie. "D:")
+# backupaccesslist        Array of groups or users requiring share and NTFS permissions to SQL backups
+# fswsharenamesuffix    Suffix for fileshare witness share name (ie. "FSW" will become <clustername>-FSW
+# fswrootdrive            Drive letter of file share witness drive holding share (ie. "D:")
+# fswaccesslist         Array of groups and users requiring share and NTFS permissions to FSW share
+#-------------------------------------------------------------------------------------------------------
+
+# Service Host dictionary (windows-cis-infra-site.yaml)
+win_servicehost:
+  hostname: WIN2012-SVC
+  ipaddress: 192.168.56.103
+  backupsharename: "SQL-Backups"
+  backuprootdrive: "C:"
+  backupaccesslist:
+  - CIS-ADM-SQL
+  - SYSTEM
+  - Administrators
+  fswsharenamesuffix: "FSW"
+  fswrootdrive: "C:"
+  fswaccesslist:
+  - CIS-ADM-INFRA
+  - CIS-ADM-SQL
+  - Administrators
+
+#-------------------------------------------------------------------------------------------------------
+# win_sqlservers 
+# Nested dictionary of SQL Servers used in the site
+#
+# Supports:
+# - standalone SQL server in a workgroup (placement 'standalone')
+# - forest placement
+# - domain placement
+#
+# Parameters
+# ----------------------------
+# win_sqlservers                    Root dictionary holding SQL server configurations
+#   <app/function>                    Indicates application or purpose (ie. cc, cpo, standalone)
+#   installsource                    Path to install source
+#   servicehost                        Service Host details. Enter 0 for standalone SQL Servers
+#   domain                            (used only when creating standalone SQL server in a workgroup)
+#     netbiosname                    Always set to: WORKGROUP
+#     password                        Always set to: "{{ win_site.localadminpassword }}"
+#   serviceaccount                    Required for clusters. Optional for standalone SQL Servers. If not specified, default system service accounts are used
+#     username                        User account to be used as SQL service account. Do NOT include domain name! Can be overwritten by sqlsvcaccount
+#     password                        Service account password
+#     oupath                        Distinguished name of the OU to store service account into
+#   config                            SQL specific installation parameters
+#     pid                            product key (use win_sqlserver2012_devkey, or win_sqlserver2012_entkey)
+#     securtitymode                    Set this to SQL
+#     sapwd                            Password for user sa-cloud
+#     sqlsysadminaccounts            Comma-separated list of accounts to add to SQL administrators
+#     features                        Comma-separated list of SQL features to install
+#     instanceport                    Port number to use for the SQL service (optional. if not specified, 1433 is used)
+#     instancedir                    SQL data directory
+#     installshareddir                Optional. Install location
+#     installsharedwowdir            Optional. WOW Install location (required when specifying 'installshareddir')
+#     instancename                    Optional. SQL instance name (if not specified "MSSQLSERVER" is used)
+#     sqlcollation                    Optional. If not specified "SQL_Latin1_General_CP1_CI_AS" is used
+#     agtsvcaccount                    Optional. SQL agent service account. If not specified <cluster>.serviceaccount.username is used
+#     sqlsvcaccount                    Optional. SQL agent service account. If not specified <cluster>.serviceaccount.username is used
+#     rssvcaccount                    Optional. SQL agent service account. If not specified <cluster>.serviceaccount.username is used
+#     issvcaccount                    Optional. SQL agent service account. If not specified <cluster>.serviceaccount.username is used
+#     sqlsvcpassword                Optional. Required is setting sqlsvcaccount
+#     agtsvcpassword                Optional. Required is setting agtsvcaccount
+#     rssvcpassword                    Optional. Required is setting rssvcaccount
+#     issvcpassword                    Optional. Required is setting issvcaccount
+#     sqlsvcstartuptype                Optional. If not specified, Automatic is used. (Manual, Disabled, Automatic)
+#     agtsvcstartuptype                Optional. If not specified, Automatic is used. (Manual, Disabled, Automatic)
+#     rssvcstartuptype                Optional. If not specified, Automatic is used. (Manual, Disabled, Automatic)
+#     issvcstartuptype                Optional. If not specified, Automatic is used. (Manual, Disabled, Automatic)
+#     
+# Info about SQL parms:
+# https://technet.microsoft.com/en-us/library/ms144259(v=sql.110).aspx
+#-------------------------------------------------------------------------------------------------------
+
+# SQL Servers dictionary (windows-cis-infra-site.yaml)
+win_sqlservers:
+  standalone:
+    installsource: "D:\\"
+    servicehost: 0
+    domain:
+      netbiosname: WORKGROUP
+      password: "{{ win_site.localadminpassword }}"
+    config:
+      pid: "{{ win_sqlserver2012_entkey }}"
+      securitymode: SQL
+      sapwd: "Password01"
+      features: SQLENGINE,REPLICATION,FULLTEXT,DQ,CONN,IS,SSMS,ADV_SSMS
+      instancedir: C:\MSSQL
+      sqlbackupdir: C:\MSSQL\SQL-Backups
+      instanceport: 1476
+      sqlcollation: "SQL_Latin1_General_CP1_CI_AS"
+  scom:
+  sccm:
+  cc:
+    installsource: "D:\\"
+    servicehost: "{{ win_servicehost }}"
+    serviceaccount: 
+      username: "sa-tst-t1-sql1"
+      password: Password01
+      oupath: "OU=SQL,{{win_topology.organizationalunits.applicationusersOU}}"
+    config:
+      pid: "{{ win_sqlserver2012_entkey }}"
+      securitymode: SQL
+      sapwd: "Password01"
+      sqlsysadminaccounts: "{{win_domainname}}\\CIS-ADM-SQL"
+      features: SQLENGINE,REPLICATION,FULLTEXT,DQ,CONN,IS,SSMS,ADV_SSMS
+      installshareddir: "C:\\Program Files\\Microsoft SQL Server"
+      installsharedwowdir: "C:\\Program Files (x86)\\Microsoft SQL Server"
+      instancename: "MSSQLSERVER"
+      instanceport: 1433
+      instancedir: "C:\\MSSQLServerData"
+      sqlcollation: "SQL_Latin1_General_CP1_CI_AS"
+      agtsvcaccount: "sa-tst-t1-sql1"
+      agtsvcpassword: "Password01"
+      agtsvcstartuptype: Automatic
+      sqlsvcaccount: "sa-tst-t1-sql1"
+      sqlsvcpassword: "Password01"
+      sqlsvcstartuptype: Automatic
+      rssvcaccount: "sa-tst-t1-sql1"
+      rssvcpassword: "Password01"
+      rssvcstartuptype: Automatic
+      issvcaccount: "sa-tst-t1-sql1"
+      issvcpassword: "Password01"
+      issvcstartuptype: Automatic
+  cpo:
+    installsource: "D:\\"
+    servicehost: "{{ win_servicehost }}"
+    serviceaccount: 
+      username: "sa-tst-t1-sql2"
+      password: Password01
+      oupath: "OU=SQL,OU={{win_topology.organizationalunits.applicationusersOU}}"
+    sqlstartupflags: '-t272'
+    config:
+      pid: "{{ win_sqlserver2012_entkey }}"
+      securitymode: SQL
+      sapwd: "Password01"
+      sqlsysadminaccounts: "{{win_domainname}}\\CIS-ADM-SQL"
+      features: SQLENGINE,REPLICATION,FULLTEXT,DQ,CONN,IS,SSMS,ADV_SSMS
+      instancename: "MSSQLSERVER"
+      instanceport: 1433
+      instancedir: "C:\\MSSQLServerData"
+
+#-------------------------------------------------------------------------------------------------------
+# win_sqlcluster 
+# Dictionary containing array of SQL clusters used in a site
+#
+# Script and dictionary supports:
+# - multiple availabilitygroups per cluster
+# - 1 to n cluster nodes
+# - 1 to n databases per availability group
+#
+# ALL parameters are required!
+# ----------------------------
+# cc:                                Dictionary specific to Cloud Cruiser (repeat strucute for CPO or other apps
+#  clustername                        Windows failover cluster name
+#  clustervip                        Windows failover cluster IP address
+#  clusternodes                        Array of Netbios computer names of the members of the cluster
+#  controlnode                        Netbios computer name of the node used to configure the failover cluster
+#  servicehost                        Pointer to service host dictionary
+#  availabilitymode                    SynchronousCommit or AsychronousCommit
+#  failovermode                        Automatic or Manual
+#  endpointport                        Port used for replication between endpoints (default: 5022)
+#  connectionmodeinsecondaryrole    Use: AllowAllConnections
+#  availabilitygroups                Array of dictionaries for each availabilitygroup in SQL AlwaysOn
+#    <AG NAME>                      Name of the availabilitygroup (see Windows Naming Standards)
+#       name                        Availability group name
+#       listenername                Netbios name of the listener for the availability group
+#       listenervip                 IP address of the listener for the availability group
+#       listenernetmask                Subnetmask of listener subnet
+#       listenerport                Listener port number
+#       databases                    Array of database names to create and add to AG 
+#-------------------------------------------------------------------------------------------------------
+
+# SQL Clusters dictionary (windows-cis-infra-site.yaml)
+win_sqlclusters:
+  cc:
+    clustername: TST-T1-SQL1
+    clustervip: 192.168.56.120
+    clusternodes:
+    - win2012-kms01
+    - win2012-kms02
+    controlnode: win2012-kms02
+    servicehost: "{{ win_servicehost }}"
+    availabilitymode: SynchronousCommit
+    failovermode: Automatic
+    endpointport: 5022
+    connectionmodeinsecondaryrole: AllowAllConnections
+    availabilitygroups: 
+      TST-T1-SQL1-AGCCT:
+        name: TST-T1-SQL1-AGCCT
+        listenername: TST-T1-AGCCT-L
+        listenervip: 192.168.56.121
+        listenernetmask: 255.255.255.0        
+        listenerport: 1433
+        databases: 
+        - Dummy
+  cpo:
+    clustername: TST-T1-SQL2
+    clustervip: 192.168.56.124
+    clusternodes:
+    - win2012-kms01
+    - win2012-kms02
+    controlnode: win2012-kms02
+    servicehost: "{{ win_servicehost }}"
+    availabilitymode: SynchronousCommit
+    failovermode: Automatic
+    endpointport: 5022
+    connectionmodeinsecondaryrole: AllowAllConnections
+    availabilitygroups: 
+      TST-T1-SQL1-AGCCT:
+        name: TST-T1-SQL1-AGPOT
+        listenername: TST-T1-AGPOT-L
+        listenervip: 192.168.56.125
+        listenernetmask: 255.255.255.0        
+        listenerport: 1433
+        databases: 
+        - Dummy
+
+#-------------------------------------------------------------------------------------------------------------------------------------
+# NOT REQUIRED - I used this to create a number of default sites in AD
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+# win_sites: dictionary for sites and site settings   -  NOT REQUIRED - I used this to create a number of default sites in AD
+#   keys: us-texas-1, us-rcdn-1, eu-ams-1, etc.
+#     subnet        : Comma-separated list of subnets (example: 10.202.4.128/27)
+#     location        : "Allen, TX", "RTP, NC", "Amsterdam, NL", etc.
+#     isprimary        : indicates the primary hub in the AD hub/spoke model (you must specify ONE, and only ONE site as "isprimary")
+#     issecondary    : indicates the secondary hub in the AD hub/spoke model (you must specify ONE, and only ONE site as "issecondary")
+#     cost            : AD site replication cost (Optional: if not specified, default value will be used)
+#     internval        : AD site replication interval (Optional: if not specified, default value will be used)
+#-------------------------------------------------------------------------------------------------------------------------------------
+
+win_sites:
+  us-texas-1:
+    subnet: 10.202.4.128/27,10.202.4.64/27
+    location: "Allen, TX"
+  us-texas-3:
+    subnet: 10.202.175.128/25
+    location: "Allen, TX"
+    isprimary: true
+  us-rdu-1:
+    subnet: 10.202.52.0/26
+    location: "RTP, NC"
+    issecondary: true
+    cost: 283
+    interval: 180
+  us-rcdn-1:
+    subnet: 10.202.84.64/26
+    location: "Richardon, TX"
+    cost: 283
+    interval: 180
+  eu-ams-1:
+    subnet: 10.202.100.64/26
+    location: "Amsterdam, NL"
+    cost: 340
+    interval: 180
+  eu-lon-1:
+    subnet: 10.202.117.128/25
+    location: "London, UK"
+    cost: 340
+    interval: 180
+  ap-hkg-1:
+    subnet: 10.202.132.64/26
+    location: "Hong Kong, CH"
+    cost: 567
+    interval: 180
+  ap-tokyo-1:
+    subnet: 10.202.148.64/26
+    location: "Tokyo, JP"
+    cost: 567
+    interval: 180
+  au-mel-1:
+    subnet: 10.203.5.64/26
+    location: "Melbourne, AU"
+    cost: 567
+    interval: 180
+  au-mel-2:
+    subnet: 10.203.37.128/25
+    location: "Melbourne, AU"
+    cost: 567
+    interval: 180
+
+#-------------------------------------------------------------------------------------------------------
+# Windows Port Requirements
+#-------------------------------------------------------------------------------------------------------
+
+# Active Directory Trust Relationship required ports (service.yaml)
+win_adports:
+  portstcp: 
+    - 389
+    - 3268
+    - 445
+    - 636
+    - 3269
+    - 53
+    - 88
+    - 139
+    - 135
+  portsudp: 
+    - 389
+    - 138
+    - 445
+    - 123
+    - 135
+    - 53
+    - 88
+    - 137
+
+# KMS port(s)
+win_kmsports:
+  portstcp: 
+     - "{{ win_kmsport }}"
+  portsudp: 
+
+# SCOM mgmt server required ports
+win_scomports:
+  portstcp:
+    - 135
+    - 139
+    - 445
+    - 5724
+    - 5723
+    - 51906
+  portsudp: 
+    - 137
+    - 138
+
+win_sccmports:
+  portstcp:
+    - 445
+    - 135
+    - 80
+    - 443
+    - 8530
+    - 8531
+    - 1475
+  portsudp: 
+    - 1434

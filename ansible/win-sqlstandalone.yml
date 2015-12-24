@@ -1,0 +1,20 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-sqlserver.yml
+# Purpose: create a simple, default standalone installation of SQL server without the need for a servicehost
+#          or domain membership
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SQL cluster 
+- name: ConfigureSQLStandalone
+  hosts: win-sqlstandalone
+  max_fail_percentage: 49
+  serial: 3
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-sqlserver,
+              sqlserver: "{{ win_sqlservers.standalone }}",
+              domaindata: "{{ win_sqlservers.standalone.domain }}" }
+

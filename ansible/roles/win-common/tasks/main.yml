@@ -1,0 +1,14 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/common
+# Perform common tasks
+#
+# Inputs: Site	- Used to set local admin password (site-specific)
+#------------------------------------------------------------------------------------------------------------------
+
+- name: SetLocalAdminPassword
+  script: setLocalAdminPassword.ps1 -Password "{{ adminpassword }}"
+  
+- name: EnableFirewallWinRM
+  script: enableFirewallWinRM.ps1
+

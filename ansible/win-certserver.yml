@@ -1,0 +1,15 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-certserver.yml
+#
+# Prereqs: Active Directory forest and domain has to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure SVC host
+- name: ConfigureCertServer
+  hosts: win-certserver
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }

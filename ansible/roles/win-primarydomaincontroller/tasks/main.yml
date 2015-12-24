@@ -1,0 +1,38 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-primarydomaincontroller
+# Purpose: Install the first domain controller of a new child domain
+# ------------------------------------------------------------------------------------------------------------------
+
+# Precreate site and sitelink for the site the child domain controller is in
+- name: PrepareSiteAndLinks
+  script: files/configureSitesAndLinks.ps1 -Topology "{{ win_topology | dictToPS }}" -Site "{{ win_site | dictToPS }}"  
+  delegate_to: "{{ win_topology.forest.primaryDNS }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+
+# Install ADDS role and features
+- name: InstallADDS
+  script: files/installADDS.ps1
+
+# Install AD components and create the forest
+- name: CreateDomain
+  script: files/createDomain.ps1 -Placement "domain" -Topology "{{ win_topology | dictToPS }}" -Site "{{ win_site | dictToPS }}"
+
+# Restart
+- include: "{{playbook_dir}}/includes/win-restart.yml"
+
+# Force DNS server settings to the static IPs of the domain controllers in the forest
+- name: ConfigureTCPIP
+  script: files/configureNetworking.ps1 -Placement "domain" -Topology "{{ win_topology | dictToPS }}"
+
+# Configure site-specific OUs in the child domian
+- name: ConfigureSiteOUsDomain
+  script: files/configureSiteOUs.ps1 -SiteName "{{ win_site.sitename }}" -DomainOUs "{{ win_ous | dictToPS }}"
+
+# Clean up the computer account for the current server from the forest
+- name: CleanupComputerAccount
+  script: files/removeComputerAccount.ps1 -ComputerName "{{ inventory_hostname }}" -Topology "{{ win_topology | dictToPS }}"  
+  delegate_to: "{{ win_topology.forest.primaryDNS }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"

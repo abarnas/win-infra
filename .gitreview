@@ -1,0 +1,6 @@
+[gerrit]
+host=ccs-gerrit.cisco.com
+port=29418
+project=service-windows-cis-infra
+defaultbranch=master
+defaultremote=gerrit

@@ -1,0 +1,29 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-restart.yml
+#--------------------------------------------------------------------------------------------------------------
+
+# Restart the server  
+- name: RestartServer
+  script: files/restartServer.ps1
+  async: 0
+  poll: 0
+  ignore_errors: true
+
+# Pause to allow services to start
+- name: Pause15
+  pause: seconds=15
+  delegate_to: localhost
+
+# Wait for the host to reboot
+- name: WaitForRestart
+  local_action: wait_for
+    host={{ inventory_hostname }}
+    port=5986
+    delay=15
+    timeout=600
+
+# Pause to allow services to start
+- name: Pause
+  pause: seconds={{ win_rebootdelay }}
+  delegate_to: localhost

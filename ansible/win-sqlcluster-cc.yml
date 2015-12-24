@@ -1,0 +1,33 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-sqlcluster-cc.yml
+# Purpose: Create a SQL cluster for Cloud Cruiser
+#
+# Prereqs: Active Directory forest and child domain has to exist 
+#          SCDP VM has to be available and booted of the "repo" image(contains SQL installation files)
+#          SVC VM has to be available (FSW and Backup)
+#--------------------------------------------------------------------------------------------------------------
+
+# SQL Cluster provisioning for Cloud Cruiser
+- name: CreateCloudCruiserSQLCluster
+  hosts: win-sqlnode-cc
+  max_fail_percentage: 49
+  serial: 3
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-failovercluster, 
+              clusterconfig: "{{ win_sqlclusters.cc }}" }
+
+    - { role: win-sqlserver,
+              primaryDC: "{{ win_site.dns.primaryDNS }}", 
+              sqlserver: "{{ win_sqlservers.cc }}",
+              domaindata: "{{ win_topology.domain }}" }
+
+    - { role: win-sqlcluster,
+              sqlserver: "{{ win_sqlservers.cc }}",
+              clusterconfig: "{{ win_sqlclusters.cc }}",
+              domaindata: "{{ win_topology.domain }}" }

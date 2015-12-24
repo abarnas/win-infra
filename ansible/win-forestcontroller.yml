@@ -1,0 +1,18 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: win-forestcontroller
+# Purpose: Add additional domain controller to an existing forest. Note that this can be a domain controller
+#          in the same site as the primary DC, or in a different site. So we have to prepare any possible new
+#          site links and subnets.
+# ------------------------------------------------------------------------------------------------------------------
+
+# Add the domain controller to the specified child domain
+- name: AddForestController
+  hosts: win-forestcontroller
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_topology.forest.password }}" }
+
+    - { role: win-domaincontroller }
+
+    - { role: win-dnsserver }

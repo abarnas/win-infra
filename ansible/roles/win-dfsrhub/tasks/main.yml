@@ -1,0 +1,16 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-dfsrhub
+# Purpose : Configure the DFSR replication group
+# ------------------------------------------------------------------------------------------------------------------
+
+# Install DFS Replication feature
+- name: InstallDFSR
+  script: files/installDFSR.ps1
+
+- name: CreateDFSRGroup
+  script: createDFSRGroup.ps1 -Placement "{{ win_domainplacement }}" -Replication "{{ win_centralhub.dfsr | dictToPS }}" -Topology "{{ win_topology | dictToPS }}"
+  delegate_to: "{{ win_centralhub.dfsr.primaryhub.ipaddress }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+  run_once: true

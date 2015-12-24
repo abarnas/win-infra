@@ -1,0 +1,19 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-kms.yml
+#
+# Prereqs: Active Directory forest has to exist 
+#          Active Directory child domain has to exist 
+#          Outbound Internet access to configure Akamai GTM Service
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure KMS service
+- name: ConfigureKMSServer
+  hosts: win-kmsserver
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-kmsserver, kmsactivate: "{{ win_site.kms.activate }}" }

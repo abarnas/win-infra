@@ -1,0 +1,27 @@
+---
+#-------------------------------------------------------------------------------------------------------
+# Akamai API authentication
+#
+# (instructions for clientToken and Secret: https://developer.akamai.com/introduction/Prov_Creds.html)
+#
+# ALL parameters are required!
+# ----------------------------
+# clientToken       : Token for API authentication
+# clientAccessToken : Token for API authentication
+# clientSecret      : Key for API authentication
+# baseAddress       : Base URL API access
+# rootAddress       : Root URL for Traffic Management (GTM) API
+# DomainName        : default domainName for KMS service
+# CidrMapName       : primary name for the Cidr Map object
+# CidrPropertyName  : Name of the property holding the primary cidr map
+#-------------------------------------------------------------------------------------------------------
+
+authentication:
+  clientToken: akab-nqtadoiezejl24j3-d5zok5mx6h226f6f
+  clientAccessToken: akab-iqqfdwnsvi2yok53-zjl5r3iswunqiehq
+  clientSecret: OqMytq0PQy4WInxR/pLBwpjNCuRBGYSTztGAOOvrHAc=
+  baseAddress: "https://akab-lx6pfytm2yb4s2kl-rk5mehhutv75sodp.luna.akamaiapis.net/"
+  rootAddress: "https://akab-lx6pfytm2yb4s2kl-rk5mehhutv75sodp.luna.akamaiapis.net/config-gtm/v1/domains"
+  domainName: kms.cloud.cisco.akadns.net
+  cidrMapName: kms_cidr
+  cidrPropertyName: cidr

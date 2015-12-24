@@ -1,0 +1,17 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-jumphost
+# Install jump host
+#------------------------------------------------------------------------------------------------------------------
+
+# Install RSAT 
+- name: InstallRSAT
+  script: installRSAT.ps1
+
+# Install SQL Management tools
+- name: InstallSQLManagementTools
+  script: installSQLManagementTools.ps1 -SQLServer "{{ win_jumphost.sqlserver | dictToPS }}" -Repository "{{ win_repository | dictToPS }}"
+ 
+# Copy Utilities
+- name: CopyJumphostTools
+  script: copyJumphostTools.ps1 -Repository "{{ win_repository | dictToPS }}" 

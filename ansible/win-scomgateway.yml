@@ -1,0 +1,16 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-scomgateway.yml
+#
+# Prereqs: Active Directory forest has to exist 
+#--------------------------------------------------------------------------------------------------------------
+
+- name: ConfigureSCOMGateway
+  hosts: win-scomgateway
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-scomgateway }

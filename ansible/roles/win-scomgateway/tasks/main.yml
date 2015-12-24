@@ -1,0 +1,35 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-scomgateway
+# Install SCOM gateway
+#
+# Inputs: 
+#------------------------------------------------------------------------------------------------------------------
+
+# Check port connectivity to SCOM management server
+- name: CheckSCOMGatewayACLs
+  script: files/checkPorts.ps1 -TargetSystem "{{ win_scom.primarymgmtserver.ipaddress }}" -TestPorts "{{ win_scomports | dictToPS }}"
+
+  # Approve SCOM Gateway
+- name: ApproveSCOMGateway
+  script: approveSCOMGateway.ps1 -Placement "{{ win_domainplacement }}" -Gateway "{{ win_site.scomgateway.hostname }}" -Topology "{{ win_topology | dictToPS }}" -SCOM "{{ win_scom | dictToPS }}" -Repository "{{ win_repository | dictToPS }}"
+  delegate_to: "{{ win_scom.primarymgmtserver.ipaddress }}"
+  connection: winrm
+  remote_user: "{{ ansible_ssh_user }}"
+
+# Copy SCOM Gateway and MOMCertImport Tools
+- name: CopySCOMInstallFiles
+  script: copySCOMFiles.ps1 -Placement "{{ win_domainplacement }}" -Topology "{{ win_topology | dictToPS }}" -SCOM "{{ win_scom | dictToPS }}" -Repository "{{ win_repository | dictToPS }}"
+
+# Install SCOM Gateway software
+- name: InstallSCOMGateway
+  script: installSCOMGateway.ps1 -Placement "{{ win_domainplacement }}" -Topology "{{ win_topology | dictToPS }}" -SCOM "{{ win_scom | dictToPS }}" -Repository "{{ win_repository | dictToPS }}"
+  
+# Generate cert request
+- name: GenerateCertRequest
+  script: newCertRequest.ps1 -Placement "{{ win_domainplacement }}"  -Topology "{{ win_topology | dictToPS }}" -SCOM "{{ win_scom | dictToPS }}"
+
+# Show manual instructions
+- name: ShowRemainingTasks
+  debug: msg="Finish installation by completing the certificate request in c:\support and import it in the Certificate MMC. Then run C:\Support\MOMCertImport to import the cert in SCOM"
+  delegate_to: localhost

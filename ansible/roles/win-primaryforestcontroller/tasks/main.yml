@@ -1,0 +1,45 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-primaryforestcontroller
+# Purpose: Install the first domain controller of a new forest
+# ------------------------------------------------------------------------------------------------------------------
+
+# Install AD components and create the forest
+- name: ConfigureTCPIP
+  script: files/configureNetworking.ps1 -Placement "forest" -Topology "{{ win_topology | dictToPS }}"
+
+# Install ADDS role and features
+- name: InstallADDS
+  script: files/installADDS.ps1
+
+# Install AD components and create the forest
+- name: CreateDomain
+  script: files/createDomain.ps1 -Placement "forest" -Topology "{{ win_topology | dictToPS }}" -Site "{{ win_site | dictToPS }}"
+  run_once: true
+
+# Restart
+- include: "{{playbook_dir}}/includes/win-restart.yml"
+
+# Force DNS server settings to the static IPs of the domain controllers in the forest
+- name: ConfigureTCPIP
+  script: files/configureNetworking.ps1 -Placement "forest" -Topology "{{ win_topology | dictToPS }}"
+
+# Configure site-specific OUs
+- name: ConfigureSiteOUs
+  script: files/configureSiteOUs.ps1 -SiteName "{{ win_site.sitename }}" -DomainOUs "{{ win_ous | dictToPS }}"
+  run_once: true
+
+# Rename default-first-site --> HAS TO BE DONE PRIOR TO CONFIGURING SITELINKS
+- name: RenameDefaultFirstSite
+  script: renameDefaultFirstSite.ps1 -SiteName "{{ win_site.sitename }}"  -Topology "{{ win_topology | dictToPS }}"
+  run_once: true
+
+# Configure Sites and Site Links
+- name: ConfigureSitesAndLinks
+  script: files/configureSitesAndLinks.ps1 -Topology "{{ win_topology | dictToPS }}" -Site "{{ win_site | dictToPS }}"
+  run_once: true
+
+# RemoveDefaultIPSiteLink
+- name: RemoveDefaultIPSiteLink
+  script: removeDefaultIPSiteLink.ps1 -Topology "{{ win_topology | dictToPS }}" 
+  run_once: true

@@ -1,0 +1,37 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: win-primarydomaincontroller
+# Purpose: Add child domain to an existing forest. Note that this can be a domain controller
+#          in the same site as the root forest, or in a different site. So we have to prepare any possible new
+#          site links and subnets.
+# ------------------------------------------------------------------------------------------------------------------
+
+# Override domain placement
+- name: OverrideDomainPlacement
+  hosts: win-primarydomaincontroller
+  gather_facts: false
+  tasks:
+    - name: OverridePlacementToForest
+      set_fact:
+        prev_domainplacement: "{{ win_domainplacement }}"
+        win_domainplacement: "forest"
+
+# Create the first domain controller of the new child domain
+- name: PrepareDomainController
+  hosts: win-primarydomaincontroller
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_topology.domain.password }}" }
+    - { role: win-domainmember }
+  tasks:
+    - name: RestoreDomainPlacement
+      set_fact: win_domainplacement="domain"
+
+# Create the child domain
+- name: CreateChildDomain
+  hosts: win-primarydomaincontroller
+  gather_facts: false
+  roles:
+    - { role: win-primarydomaincontroller }
+    - { role: win-dnsserver }
+

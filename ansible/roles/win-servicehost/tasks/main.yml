@@ -1,0 +1,14 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: /roles/win-servicehost
+# Install servicehost
+#
+# Inputs: 
+#------------------------------------------------------------------------------------------------------------------
+
+# Prepare data drive
+- name: PrepareDataDrive
+  script: files/formatDrive.ps1 -Drive "{{ win_servicehost.backuprootdrive }}"
+
+- name: ConfigureServiceHost
+  script: configureServiceHost.ps1 -Domain "{{ win_topology.domain | dictToPS }}" 

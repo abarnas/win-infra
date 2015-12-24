@@ -1,0 +1,35 @@
+---
+# ------------------------------------------------------------------------------------------------------------------
+# Playbook: win-core-cisinfra.yml
+# Purpose: Top level playbook for service-windows-cis-cinfra
+#
+# IMPORTANT: Do NOT change sequence!
+# ------------------------------------------------------------------------------------------------------------------
+
+# Create first domain controller in new forest
+- include: win-primaryforestcontroller.yml
+
+# Create additional domain controller in forest
+- include: win-forestcontroller.yml
+
+# Create first domain controller in new child domain
+- include: win-primarydomaincontroller.yml
+
+# Create additional domain controller(s) in forest and/or child domain
+- include: win-domaincontroller.yml
+
+# Install Windows Cert Server
+- include: win-certserver.yml
+
+# Configure service host
+- include: win-servicehost.yml
+
+# Install SCCM distribution point (SCDP Server)
+- include: win-scdpserver.yml
+
+# Install Windows Jump Host
+- include: win-jumphost.yml
+
+# Install SCOM gateway server (MUST be last playbook)
+- include: win-sccmmgmtserver.yml
+

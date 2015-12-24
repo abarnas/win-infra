@@ -1,0 +1,17 @@
+---
+#--------------------------------------------------------------------------------------------------------------
+# Playbook: win-dfsrspoke.yml
+#
+# Prereqs: Management domain has to exist
+#--------------------------------------------------------------------------------------------------------------
+
+# Install and configure DFS replication spoke
+- name: ConfigureDFSSpoke
+  hosts: win-dfsrspoke
+  gather_facts: false
+  roles:
+    - { role: win-common, adminpassword: "{{ win_site.localadminpassword }}" }
+
+    - { role: win-domainmember }
+
+    - { role: win-dfsspoke }
